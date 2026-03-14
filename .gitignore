@@ -1,0 +1,19 @@
+# Environment
+.env
+.env.local
+.env.production
+
+# Datos sensibles de clientes (nunca al repo)
+clients/*/delivery.md
+clients/*/workflow-draft.md
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+*.swp
+
+# Node (por si se agrega tooling)
+node_modules/
