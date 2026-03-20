@@ -118,6 +118,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .attach-btn:hover{border-color:var(--accent);color:var(--accent)}
 .url-preview{margin:8px 0;padding:8px 12px;background:var(--card);border:1px solid var(--border);border-radius:8px;font-size:11px}
 .url-preview .url-thumb{width:100%;max-height:200px;object-fit:cover;border-radius:6px;margin-top:6px}
+.typing-dots{animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 
 /* ============ LOG PANEL ============ */
 #panel-log{flex-direction:column;padding:20px 24px;gap:8px;overflow-y:auto}
@@ -149,6 +151,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
     <div class="stat"><div class="num" id="s-active">0</div><div class="label">Activos</div></div>
     <div class="stat"><div class="num" id="s-tasks">0</div><div class="label">Tareas</div></div>
     <div class="stat"><div class="num" id="s-done">0</div><div class="label">Hechas</div></div>
+    <div class="stat" id="ollama-status" title="Ollama + Qwen 2.5 Coder"><div class="num" style="font-size:14px" id="ollama-dot">...</div><div class="label">Qwen LLM</div></div>
   </div>
 </div>
 
@@ -240,7 +243,7 @@ const agents = [
   {id:'blueprint',name:'BLUEPRINT',role:'Blueprints de edicion',team:'video',dept:'core',color:'#3b82f6',model:'opus',status:'idle',task:''},
   {id:'lens',name:'LENS',role:'Analizador de referencias',team:'video',dept:'core',color:'#06b6d4',model:'sonnet',status:'idle',task:''},
   {id:'scout',name:'SCOUT',role:'Buscador de recursos',team:'video',dept:'core',color:'#eab308',model:'sonnet',status:'idle',task:''},
-  {id:'configura',name:'CONFIGURA',role:'Configurador CapCut',team:'video',dept:'core',color:'#14b8a6',model:'sonnet',status:'idle',task:''},
+  {id:'configura',name:'CONFIGURA',role:'Remotion + Adobe Premiere',team:'video',dept:'core',color:'#14b8a6',model:'sonnet',status:'idle',task:''},
   // BUSINESS TEAM - Direccion
   {id:'ceo',name:'CEO',role:'Director General',team:'business',dept:'direccion',color:'#f59e0b',model:'opus',status:'idle',task:''},
   // Business - Marketing
@@ -272,6 +275,24 @@ let chatMode='n8n';
 let doneCount=0;
 let modalAction=null;
 let pendingUrl=null;
+const OLLAMA_URL='http://localhost:11434/api/chat';
+const OLLAMA_MODEL='qwen2.5-coder:7b';
+let ollamaAvailable=false;
+
+// Check Ollama on load
+(async()=>{try{const r=await fetch('http://localhost:11434/api/tags');if(r.ok){ollamaAvailable=true;document.getElementById('ollama-dot').textContent='ON';document.getElementById('ollama-dot').style.color='var(--green)';console.log('Ollama OK')}}catch(e){document.getElementById('ollama-dot').textContent='OFF';document.getElementById('ollama-dot').style.color='var(--red)';console.log('Ollama offline')}})();
+
+async function callOllama(system,prompt){
+  if(!ollamaAvailable)return null;
+  try{
+    const r=await fetch(OLLAMA_URL,{method:'POST',body:JSON.stringify({
+      model:OLLAMA_MODEL,stream:false,
+      messages:[{role:'system',content:system},{role:'user',content:prompt}]
+    })});
+    const d=await r.json();
+    return d.message?.content||null;
+  }catch(e){return null}
+}
 
 // ============ CHAT MODE CONFIG ============
 const chatModes={
@@ -289,7 +310,7 @@ const chatModes={
   },
   video:{
     agents:['vora','blueprint','lens','scout','configura','guionista','ideador','director'],
-    welcome:'Modo Video: Describe tu idea de video o pega un enlace de TikTok/Instagram/YouTube para analizar y recrear con tu estilo.',
+    welcome:'Modo Video + Remotion: Describe tu idea de video, pega un enlace (TikTok/IG/YT), o pide B-rolls y escenas. Remotion genera el video programaticamente. Sin edicion manual.',
     router(msg){
       const m=msg.toLowerCase();
       if(m.includes('guion')||m.includes('script')||m.includes('escrib'))return 'guionista';
@@ -297,7 +318,7 @@ const chatModes={
       if(m.includes('blueprint')||m.includes('edicion')||m.includes('editar'))return 'blueprint';
       if(m.includes('referencia')||m.includes('analiz')||m.includes('estilo'))return 'lens';
       if(m.includes('recurso')||m.includes('musica')||m.includes('sfx')||m.includes('broll'))return 'scout';
-      if(m.includes('capcut')||m.includes('export')||m.includes('config'))return 'configura';
+      if(m.includes('remotion')||m.includes('render')||m.includes('export')||m.includes('premiere')||m.includes('config'))return 'configura';
       if(m.includes('revis')||m.includes('aprueb'))return 'director';
       return 'vora';
     }
@@ -518,23 +539,59 @@ function sendChat(){
   renderChatSidebar();
   updateStats();
 
-  // Simulate agent response
-  setTimeout(()=>{
-    let response='';
-    if(chatMode==='n8n'){
-      response=generateN8NResponse(agent,text);
-    }else if(chatMode==='video'){
-      response=generateVideoResponse(agent,text);
-    }else{
-      response=generateCEOResponse(agent,text);
-    }
-    msgs.innerHTML+=`<div class="msg agent"><div class="msg-header" style="color:${agent.color}">${agent.name}</div>${response}</div>`;
-    msgs.scrollTop=msgs.scrollHeight;
+  // Show typing indicator
+  const typingId='typing-'+Date.now();
+  msgs.innerHTML+=`<div class="msg agent" id="${typingId}"><div class="msg-header" style="color:${agent.color}">${agent.name}</div><span class="typing-dots">Pensando...</span></div>`;
+  msgs.scrollTop=msgs.scrollHeight;
 
+  // Try Ollama first, fallback to simulated
+  (async()=>{
+    let response='';
+    const systemPrompts={
+      aria:'Eres ARIA, orquestador de automatizaciones N8N de aut8ma. Coordinas el equipo y diseñas la estrategia de automatizacion. Responde en español. Genera JSON de N8N cuando te lo pidan.',
+      nexarch:'Eres NEXARCH, arquitecto de N8N de aut8ma. Diseñas la arquitectura completa de nodos N8N (secciones A-I). Lista todos los nodos con tipo, posicion y conexiones. Responde en español.',
+      jsoncraft:'Eres JSONCRAFT, constructor de JSON para N8N. Genera JSON valido para importar directamente en n8n. Usa nodos reales: webhook, IF, Code, HTTP Request, OpenAI, etc. Responde en español. SIEMPRE da el JSON completo.',
+      scribe:'Eres SCRIBE, escritor de system prompts para chatbots de WhatsApp de aut8ma Venezuela. Incluye tecnicas Wolf of Wall Street, clasificacion de leads, anti-inyeccion. Responde en español.',
+      qagate:'Eres QA-GATE, validador de calidad de aut8ma. Revisas JSON de N8N y prompts contra el checklist de 26 items. Das reporte detallado PASS/FAIL. Responde en español.',
+      vora:'Eres VORA, orquestador de video de aut8ma. Coordinas la creacion de videos con Remotion. Responde en español.',
+      blueprint:'Eres BLUEPRINT, generador de blueprints de edicion de video estilo Victor Heras. Das instrucciones segmento por segmento con timestamps, subtitulos con colores hex, SFX, B-roll y transiciones. Responde en español.',
+      lens:'Eres LENS, analizador de videos de referencia de aut8ma. Extraes el estilo de edicion: frecuencia de cortes, subtitulos, paleta de colores, SFX, ritmo. Responde en español.',
+      scout:'Eres SCOUT, buscador de recursos de video. Das listas de B-rolls, SFX, musica y fuentes con keywords de busqueda y enlaces. Responde en español.',
+      configura:'Eres CONFIGURA, configurador tecnico de video de aut8ma. Das specs exactas de exportacion, subtitulos, capas y color grading para Remotion/Adobe. Responde en español.',
+      guionista:'Eres el GUIONISTA experto de aut8ma, estilo Victor Heras. Creas guiones de video de 6 secciones: HOOK(dolor/miedo/curiosidad en 3seg), PROBLEMA, HISTORIA, SOLUCION, PRUEBA SOCIAL, CTA. Usas frases cortas (max 12 palabras), numeros especificos, micro-hooks cada 10-15seg, NUNCA empiezas con hola. Vendes chatbots IA de aut8ma a negocios venezolanos. Responde en español.',
+      ideador:'Eres IDEADOR de aut8ma. Generas ideas de contenido para TikTok/Reels/Shorts usando 5 pilares: 40% Educativo, 30% Venta, 20% Entretenimiento, 10% Autoridad. Das calendarios semanales con temas virales. Responde en español.',
+      director:'Eres el DIRECTOR CREATIVO de aut8ma. Revisas guiones y contenido para maxima retencion y coherencia de marca. Das puntuacion y correcciones. Responde en español.',
+      ceo:'Eres el CEO virtual de aut8ma, agencia de chatbots IA en Venezuela. Coordinas marketing, ventas, contenido, precios y retencion. Das reportes ejecutivos y decisiones estrategicas. Responde en español.',
+      estratega:'Eres ESTRATEGA de marketing de aut8ma Venezuela. Diseñas campañas, lanzamientos y estrategias de crecimiento. Usas framework BANTES. Responde en español.',
+      community:'Eres COMMUNITY manager de aut8ma. Gestionas TikTok, Instagram, YouTube. Creas copys, calendarios y manejas la comunidad. Responde en español.',
+      brandmaster:'Eres BRANDMASTER de aut8ma. Defines identidad visual, tono de comunicacion y consistencia de marca. Responde en español.',
+      closer:'Eres CLOSER de aut8ma. Creas scripts de venta, manejas objeciones y diseñas procesos de cierre para Venezuela. Usas lenguaje de beneficios, nunca tecnico. Responde en español.',
+      promos:'Eres PROMOS de aut8ma. Creas programas de lealtad, descuentos estrategicos y promos de retencion para Venezuela. Responde en español.',
+      contador:'Eres CONTADOR de aut8ma Venezuela. Calculas precios en USD y Bs usando tasas BCV/Paralelo/Binance. Muestras margenes, ROI y generas cotizaciones. Planes: Emprendedor $69/mes, Negocio $129/mes, Premium $199/mes. Responde en español.',
+      analista:'Eres ANALISTA de mercado de aut8ma. Investigas tendencias IA, competencia venezolana y oportunidades. Responde en español.',
+      fidelidad:'Eres FIDELIDAD de aut8ma. Gestionas onboarding 30 dias, reportes de valor, alertas de riesgo y protocolo anti-desercion. Meta: retencion >95%. Responde en español.',
+      lanzador:'Eres LANZADOR de aut8ma. Planificas lanzamientos de nuevas automatizaciones y servicios al mercado venezolano. Responde en español.'
+    };
+    const sysPrompt=systemPrompts[agent.id]||`Eres ${agent.name}, agente de aut8ma. Responde en español.`;
+
+    const ollamaResp=await callOllama(sysPrompt,text);
+    if(ollamaResp){
+      response=ollamaResp.replace(/\n/g,'<br>');
+      const badge='<span style="font-size:9px;padding:1px 4px;border-radius:3px;background:rgba(34,197,94,.2);color:var(--green);margin-left:6px">Qwen 2.5</span>';
+      document.getElementById(typingId).innerHTML=`<div class="msg-header" style="color:${agent.color}">${agent.name}${badge}</div>${response}`;
+    }else{
+      // Fallback to simulated responses
+      if(chatMode==='n8n')response=generateN8NResponse(agent,text);
+      else if(chatMode==='video')response=generateVideoResponse(agent,text);
+      else response=generateCEOResponse(agent,text);
+      const badge='<span style="font-size:9px;padding:1px 4px;border-radius:3px;background:rgba(234,179,8,.2);color:var(--yellow);margin-left:6px">simulado</span>';
+      document.getElementById(typingId).innerHTML=`<div class="msg-header" style="color:${agent.color}">${agent.name}${badge}</div>${response}`;
+    }
+    msgs.scrollTop=msgs.scrollHeight;
     agent.status='idle';
     renderChatSidebar();
     updateStats();
-  },1500);
+  })();
 
   msgs.scrollTop=msgs.scrollHeight;
 }
