@@ -3,262 +3,747 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>aut8ma — Oficina de Agentes</title>
+<title>aut8ma HQ — Oficina de Agentes</title>
 <style>
-:root{--bg:#0a0a0f;--card:#12121a;--border:#1e1e2e;--accent:#f97316;--blue:#3b82f6;--green:#22c55e;--red:#ef4444;--yellow:#eab308;--pink:#ec4899;--purple:#a855f7;--cyan:#06b6d4;--teal:#14b8a6;--gold:#f59e0b;--magenta:#d946ef;--text:#e2e8f0;--muted:#64748b}
+:root{--bg:#0a0a0f;--card:#12121a;--border:#1e1e2e;--accent:#f97316;--blue:#3b82f6;--green:#22c55e;--red:#ef4444;--yellow:#eab308;--pink:#ec4899;--purple:#a855f7;--cyan:#06b6d4;--teal:#14b8a6;--gold:#f59e0b;--magenta:#d946ef;--text:#e2e8f0;--muted:#64748b;--darker:#080810}
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
-.header{background:linear-gradient(135deg,#1a1a2e,#16213e);border-bottom:1px solid var(--border);padding:20px 30px;display:flex;justify-content:space-between;align-items:center}
-.header h1{font-size:24px;background:linear-gradient(90deg,var(--accent),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.header .stats{display:flex;gap:20px}
-.stat{text-align:center;padding:8px 16px;background:var(--card);border-radius:8px;border:1px solid var(--border)}
-.stat .num{font-size:20px;font-weight:700;color:var(--accent)}
-.stat .label{font-size:11px;color:var(--muted);text-transform:uppercase}
-.tabs{display:flex;gap:4px;padding:15px 30px;background:var(--card);border-bottom:1px solid var(--border)}
-.tab{padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px;border:1px solid transparent;transition:all .2s;color:var(--muted)}
-.tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
-.tab:hover:not(.active){border-color:var(--border);color:var(--text)}
-.office{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;padding:20px 30px}
-.agent-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;transition:all .3s;position:relative;overflow:hidden}
-.agent-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 8px 30px rgba(249,115,22,.1)}
-.agent-card .color-bar{position:absolute;top:0;left:0;right:0;height:3px}
-.agent-card .top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
-.agent-card .name{font-size:16px;font-weight:700}
-.agent-card .model{font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(255,255,255,.05);color:var(--muted)}
-.agent-card .role{font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.4}
-.agent-card .status{display:flex;align-items:center;gap:6px;font-size:12px;padding:6px 10px;border-radius:6px;background:rgba(255,255,255,.03)}
-.status-dot{width:8px;height:8px;border-radius:50%;animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.agent-card .task{font-size:11px;color:var(--muted);margin-top:8px;padding:8px;background:rgba(255,255,255,.02);border-radius:6px;border-left:2px solid var(--border)}
-.agent-card .actions{display:flex;gap:6px;margin-top:12px}
-.btn{padding:6px 12px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text);font-size:11px;cursor:pointer;transition:all .2s}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* HEADER */
+.header{background:linear-gradient(135deg,#1a1a2e,#16213e);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:50}
+.header h1{font-size:22px;background:linear-gradient(90deg,var(--accent),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header .sub{font-size:11px;color:var(--muted);margin-top:2px}
+.stats{display:flex;gap:12px}
+.stat{text-align:center;padding:6px 14px;background:var(--card);border-radius:8px;border:1px solid var(--border)}
+.stat .num{font-size:18px;font-weight:700;color:var(--accent)}
+.stat .label{font-size:10px;color:var(--muted);text-transform:uppercase}
+
+/* TABS */
+.main-tabs{display:flex;gap:2px;padding:0 24px;background:var(--darker);border-bottom:1px solid var(--border)}
+.main-tab{padding:12px 20px;cursor:pointer;font-size:13px;color:var(--muted);border-bottom:2px solid transparent;transition:all .2s}
+.main-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.main-tab:hover:not(.active){color:var(--text)}
+.main-tab .icon{margin-right:6px}
+
+/* PANELS */
+.panel{display:none;min-height:calc(100vh - 120px)}
+.panel.active{display:flex}
+
+/* ============ OFFICE PANEL (Pixel) ============ */
+#panel-office{flex-direction:column;background:#1a1a2e}
+.pixel-office{flex:1;position:relative;overflow:hidden;background:linear-gradient(180deg,#0f0f23 0%,#1a1a2e 100%)}
+.floor{position:absolute;bottom:0;left:0;right:0;height:60%;background:linear-gradient(180deg,#1e1e3a 0%,#15152a 100%);border-top:3px solid #2a2a4a}
+.floor-grid{position:absolute;bottom:0;left:0;right:0;height:60%;background-image:linear-gradient(rgba(255,255,255,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.02) 1px,transparent 1px);background-size:40px 40px}
+.desk{position:absolute;width:80px;height:45px;background:linear-gradient(180deg,#4a3728,#3a2a1e);border-radius:4px 4px 0 0;border:2px solid #5a4738;border-bottom:none}
+.desk::after{content:'';position:absolute;top:5px;left:8px;right:8px;height:18px;background:#1a2a3a;border-radius:2px;box-shadow:0 0 8px rgba(59,130,246,.3)}
+.pixel-agent{position:absolute;width:24px;height:32px;transition:all 2s ease-in-out;cursor:pointer}
+.pixel-agent .body{width:24px;height:20px;border-radius:6px 6px 2px 2px;position:absolute;bottom:0}
+.pixel-agent .head{width:16px;height:16px;border-radius:50%;position:absolute;top:0;left:4px;background:#ffd4a3}
+.pixel-agent .eyes{position:absolute;top:6px;left:7px;width:10px;display:flex;gap:4px}
+.pixel-agent .eye{width:3px;height:3px;background:#333;border-radius:50%}
+.pixel-agent .name-tag{position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:8px;font-weight:700;white-space:nowrap;padding:1px 4px;border-radius:3px;color:#fff}
+.pixel-agent .status-bubble{position:absolute;top:-34px;left:50%;transform:translateX(-50%);font-size:7px;white-space:nowrap;padding:2px 6px;border-radius:8px;background:rgba(0,0,0,.7);color:var(--muted);border:1px solid var(--border)}
+.pixel-agent.working .status-bubble{color:var(--green);border-color:var(--green)}
+.pixel-agent.working .body{animation:work-bounce .5s infinite alternate}
+@keyframes work-bounce{0%{transform:translateY(0)}100%{transform:translateY(-2px)}}
+.room-label{position:absolute;font-size:10px;text-transform:uppercase;letter-spacing:2px;color:rgba(255,255,255,.15);font-weight:700}
+.room-divider{position:absolute;width:2px;background:rgba(255,255,255,.05);top:20%}
+.water-cooler{position:absolute;width:20px;height:30px;background:linear-gradient(180deg,#4a90d9,#2a5a8a);border-radius:4px;border:2px solid #5aa0e9}
+.plant{position:absolute;width:16px;height:24px}
+.plant::before{content:'';position:absolute;bottom:0;left:4px;width:8px;height:10px;background:#6b4226;border-radius:2px}
+.plant::after{content:'';position:absolute;top:0;left:0;width:16px;height:16px;background:#22c55e;border-radius:50%;opacity:.8}
+
+/* ============ AGENTS PANEL ============ */
+#panel-agents{flex-direction:column;padding:20px 24px;gap:16px}
+.team-section{margin-bottom:8px}
+.team-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding:8px 12px;background:var(--card);border-radius:8px;border:1px solid var(--border)}
+.team-header .team-name{font-size:13px;text-transform:uppercase;letter-spacing:1px;font-weight:600}
+.team-header .team-btn{padding:5px 12px;border-radius:6px;border:1px solid var(--accent);background:transparent;color:var(--accent);font-size:11px;cursor:pointer;transition:all .2s}
+.team-header .team-btn:hover{background:var(--accent);color:#fff}
+.dept-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin:12px 0 6px 4px;font-weight:600}
+.agents-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.agent-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;transition:all .3s;position:relative;overflow:hidden}
+.agent-card:hover{border-color:var(--accent);transform:translateY(-1px)}
+.agent-card .color-bar{position:absolute;top:0;left:0;right:0;height:2px}
+.agent-card .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.agent-card .name{font-size:14px;font-weight:700}
+.agent-card .badges{display:flex;gap:4px}
+.agent-card .badge{font-size:9px;padding:2px 6px;border-radius:3px;background:rgba(255,255,255,.05);color:var(--muted)}
+.agent-card .role{font-size:11px;color:var(--muted);margin-bottom:8px;line-height:1.3}
+.agent-card .status{display:flex;align-items:center;gap:5px;font-size:11px;padding:4px 8px;border-radius:5px;background:rgba(255,255,255,.03)}
+.status-dot{width:7px;height:7px;border-radius:50%}
+.status-dot.pulse{animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.agent-card .task-text{font-size:10px;color:var(--muted);margin-top:6px;padding:6px;background:rgba(255,255,255,.02);border-radius:4px;border-left:2px solid var(--border)}
+.agent-card .actions{display:flex;gap:4px;margin-top:8px}
+.btn{padding:5px 10px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--text);font-size:10px;cursor:pointer;transition:all .2s}
 .btn:hover{border-color:var(--accent);color:var(--accent)}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
 .btn.primary:hover{background:#ea580c}
+.btn.danger{color:var(--red);border-color:transparent}
+.btn.danger:hover{border-color:var(--red)}
+
+/* ============ CHAT PANEL ============ */
+#panel-chat{flex-direction:column;height:calc(100vh - 120px)}
+.chat-modes{display:flex;gap:2px;padding:8px 16px;background:var(--darker);border-bottom:1px solid var(--border)}
+.chat-mode{padding:8px 16px;border-radius:6px;cursor:pointer;font-size:12px;color:var(--muted);border:1px solid transparent;transition:all .2s;display:flex;align-items:center;gap:6px}
+.chat-mode.active{background:var(--card);color:var(--text);border-color:var(--border)}
+.chat-mode .mode-dot{width:8px;height:8px;border-radius:50%}
+.chat-container{flex:1;display:flex;overflow:hidden}
+.chat-sidebar{width:220px;background:var(--darker);border-right:1px solid var(--border);padding:12px;overflow-y:auto;display:flex;flex-direction:column;gap:4px}
+.chat-sidebar .sidebar-title{font-size:10px;text-transform:uppercase;color:var(--muted);letter-spacing:1px;margin:8px 0 4px;font-weight:600}
+.chat-sidebar .agent-pill{padding:6px 10px;border-radius:6px;font-size:11px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px}
+.chat-sidebar .agent-pill:hover{background:var(--card)}
+.chat-sidebar .agent-pill .pill-dot{width:6px;height:6px;border-radius:50%}
+.chat-main{flex:1;display:flex;flex-direction:column}
+.chat-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
+.msg{max-width:80%;padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.5}
+.msg.user{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-right-radius:4px}
+.msg.agent{align-self:flex-start;background:var(--card);border:1px solid var(--border);border-bottom-left-radius:4px}
+.msg .msg-header{font-size:10px;font-weight:700;margin-bottom:4px;opacity:.7}
+.msg .media-preview{margin-top:8px;border-radius:8px;overflow:hidden;border:1px solid var(--border)}
+.msg .media-preview img,.msg .media-preview video{max-width:100%;max-height:300px;display:block}
+.msg .media-preview iframe{width:100%;height:250px;border:none}
+.msg .media-preview .file-attach{padding:8px 12px;background:rgba(255,255,255,.05);display:flex;align-items:center;gap:8px;font-size:11px}
+.msg .json-block{margin-top:8px;padding:10px;background:#0d1117;border-radius:6px;font-family:'Cascadia Code',monospace;font-size:11px;overflow-x:auto;max-height:300px;overflow-y:auto;white-space:pre;color:#79c0ff;border:1px solid #21262d}
+.chat-input-area{padding:12px 16px;background:var(--darker);border-top:1px solid var(--border)}
+.chat-input-row{display:flex;gap:8px;align-items:flex-end}
+.chat-input-row textarea{flex:1;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;resize:none;font-family:inherit;min-height:44px;max-height:150px}
+.chat-input-row textarea:focus{outline:none;border-color:var(--accent)}
+.chat-input-row .send-btn{width:44px;height:44px;border-radius:10px;background:var(--accent);border:none;color:#fff;font-size:18px;cursor:pointer;transition:all .2s;flex-shrink:0}
+.chat-input-row .send-btn:hover{background:#ea580c}
+.attach-bar{display:flex;gap:6px;margin-bottom:8px}
+.attach-btn{padding:4px 10px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:10px;cursor:pointer;transition:all .2s}
+.attach-btn:hover{border-color:var(--accent);color:var(--accent)}
+.url-preview{margin:8px 0;padding:8px 12px;background:var(--card);border:1px solid var(--border);border-radius:8px;font-size:11px}
+.url-preview .url-thumb{width:100%;max-height:200px;object-fit:cover;border-radius:6px;margin-top:6px}
+
+/* ============ LOG PANEL ============ */
+#panel-log{flex-direction:column;padding:20px 24px;gap:8px;overflow-y:auto}
+.log-entry{padding:8px 12px;border-left:3px solid var(--border);font-size:12px;background:var(--card);border-radius:0 6px 6px 0}
+.log-entry .time{color:var(--muted);margin-right:6px;font-family:monospace;font-size:11px}
+.log-entry .agent-tag{padding:1px 5px;border-radius:3px;font-size:9px;font-weight:600;margin-right:4px;color:#fff}
+
+/* MODAL */
 .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);display:none;justify-content:center;align-items:center;z-index:100}
 .modal-overlay.show{display:flex}
-.modal{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:30px;width:90%;max-width:500px;max-height:80vh;overflow-y:auto}
-.modal h2{font-size:18px;margin-bottom:15px}
-.modal textarea{width:100%;height:120px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;color:var(--text);font-size:13px;resize:vertical;font-family:inherit}
-.modal textarea:focus{outline:none;border-color:var(--accent)}
-.modal .modal-actions{display:flex;gap:8px;margin-top:15px;justify-content:flex-end}
-.modal select{width:100%;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;margin-bottom:12px}
-.log{padding:20px 30px}
-.log-entry{padding:10px 15px;border-left:3px solid var(--border);margin-bottom:8px;font-size:12px;background:var(--card);border-radius:0 8px 8px 0}
-.log-entry .time{color:var(--muted);margin-right:8px}
-.log-entry .agent-tag{padding:2px 6px;border-radius:3px;font-size:10px;font-weight:600;margin-right:6px}
-.team-label{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);padding:15px 30px 5px;font-weight:600}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;width:90%;max-width:480px;max-height:80vh;overflow-y:auto}
+.modal h2{font-size:16px;margin-bottom:12px}
+.modal textarea,.modal select,.modal input{width:100%;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;font-family:inherit;margin-bottom:10px}
+.modal textarea{height:100px;resize:vertical}
+.modal textarea:focus,.modal select:focus,.modal input:focus{outline:none;border-color:var(--accent)}
+.modal .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}
 </style>
 </head>
 <body>
 
+<!-- HEADER -->
 <div class="header">
   <div>
-    <h1>aut8ma — Oficina de Agentes</h1>
-    <div style="font-size:12px;color:var(--muted);margin-top:4px">Sistema Multi-Agente · Venezuela 2026</div>
+    <h1>aut8ma HQ</h1>
+    <div class="sub">Sistema Multi-Agente · Oficina Virtual · Venezuela 2026</div>
   </div>
   <div class="stats">
-    <div class="stat"><div class="num" id="total-agents">22</div><div class="label">Agentes</div></div>
-    <div class="stat"><div class="num" id="active-count">0</div><div class="label">Activos</div></div>
-    <div class="stat"><div class="num" id="task-count">0</div><div class="label">Tareas Hoy</div></div>
+    <div class="stat"><div class="num" id="s-total">22</div><div class="label">Agentes</div></div>
+    <div class="stat"><div class="num" id="s-active">0</div><div class="label">Activos</div></div>
+    <div class="stat"><div class="num" id="s-tasks">0</div><div class="label">Tareas</div></div>
+    <div class="stat"><div class="num" id="s-done">0</div><div class="label">Hechas</div></div>
   </div>
 </div>
 
-<div class="tabs">
-  <div class="tab active" onclick="showTeam('all')">Todos</div>
-  <div class="tab" onclick="showTeam('automation')">Automation</div>
-  <div class="tab" onclick="showTeam('video')">Video</div>
-  <div class="tab" onclick="showTeam('business')">Business</div>
-  <div class="tab" onclick="showTeam('log')">Activity Log</div>
+<!-- MAIN TABS -->
+<div class="main-tabs">
+  <div class="main-tab active" onclick="switchPanel('office')"><span class="icon">🏢</span>Oficina</div>
+  <div class="main-tab" onclick="switchPanel('agents')"><span class="icon">🤖</span>Agentes</div>
+  <div class="main-tab" onclick="switchPanel('chat')"><span class="icon">💬</span>Chat</div>
+  <div class="main-tab" onclick="switchPanel('log')"><span class="icon">📋</span>Log</div>
 </div>
 
-<div id="office" class="office"></div>
-<div id="log-view" class="log" style="display:none"></div>
+<!-- OFFICE PANEL (Pixel) -->
+<div class="panel active" id="panel-office">
+  <div class="pixel-office" id="pixelOffice"></div>
+</div>
 
+<!-- AGENTS PANEL -->
+<div class="panel" id="panel-agents">
+  <div id="agents-container"></div>
+</div>
+
+<!-- CHAT PANEL -->
+<div class="panel" id="panel-chat">
+  <div class="chat-modes">
+    <div class="chat-mode active" onclick="switchChatMode('n8n')">
+      <div class="mode-dot" style="background:var(--blue)"></div>N8N Automatizaciones
+    </div>
+    <div class="chat-mode" onclick="switchChatMode('video')">
+      <div class="mode-dot" style="background:var(--purple)"></div>Video & Edicion
+    </div>
+    <div class="chat-mode" onclick="switchChatMode('ceo')">
+      <div class="mode-dot" style="background:var(--gold)"></div>CEO & Business
+    </div>
+  </div>
+  <div class="chat-container">
+    <div class="chat-sidebar" id="chatSidebar"></div>
+    <div class="chat-main">
+      <div class="chat-messages" id="chatMessages">
+        <div class="msg agent">
+          <div class="msg-header">SISTEMA</div>
+          Bienvenido al chat de aut8ma HQ. Selecciona un modo y describe tu tarea. Los agentes se asignaran automaticamente segun lo que necesites.
+        </div>
+      </div>
+      <div class="chat-input-area">
+        <div class="attach-bar">
+          <button class="attach-btn" onclick="attachFile('img')">📷 Imagen</button>
+          <button class="attach-btn" onclick="attachFile('doc')">📄 Documento</button>
+          <button class="attach-btn" onclick="attachFile('vid')">🎬 Video</button>
+          <button class="attach-btn" onclick="pasteUrl()">🔗 URL (TikTok/IG/YT)</button>
+        </div>
+        <div id="urlPreview"></div>
+        <div class="chat-input-row">
+          <textarea id="chatInput" placeholder="Describe tu tarea... (ej: 'Hazme una automatizacion de WhatsApp con chatbot IA')" rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat()}"></textarea>
+          <button class="send-btn" onclick="sendChat()">➤</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LOG PANEL -->
+<div class="panel" id="panel-log">
+  <div id="log-container"></div>
+</div>
+
+<!-- MODAL -->
 <div class="modal-overlay" id="modal">
   <div class="modal">
-    <h2 id="modal-title">Asignar Tarea</h2>
-    <select id="modal-agent"></select>
-    <textarea id="modal-task" placeholder="Describe la tarea para este agente..."></textarea>
-    <div style="margin-top:10px">
-      <label style="font-size:12px;color:var(--muted)">Prioridad:</label>
-      <select id="modal-priority" style="width:auto;display:inline;margin-left:8px">
-        <option value="normal">Normal</option>
-        <option value="alta">Alta</option>
-        <option value="urgente">Urgente</option>
-      </select>
-    </div>
+    <h2 id="modal-title">Tarea para Equipo</h2>
+    <div id="modal-body"></div>
     <div class="modal-actions">
       <button class="btn" onclick="closeModal()">Cancelar</button>
-      <button class="btn primary" onclick="assignTask()">Asignar</button>
+      <button class="btn primary" id="modal-confirm" onclick="confirmModal()">Asignar</button>
     </div>
   </div>
 </div>
 
 <script>
+// ============ DATA ============
 const agents = [
-  // Automation Team
-  {id:'aria',name:'ARIA',role:'Orquestador de Automatizaciones',team:'automation',color:'var(--accent)',model:'opus',status:'idle',task:''},
-  {id:'nexarch',name:'NEXARCH',role:'Arquitecto N8N — diseña nodos y flujos',team:'automation',color:'var(--blue)',model:'opus',status:'idle',task:''},
-  {id:'jsoncraft',name:'JSONCRAFT',role:'Constructor JSON N8N (max 15 nodos/parte)',team:'automation',color:'var(--purple)',model:'sonnet',status:'idle',task:''},
-  {id:'scribe',name:'SCRIBE',role:'Escritor de Prompts B (chatbot IA)',team:'automation',color:'var(--green)',model:'sonnet',status:'idle',task:''},
-  {id:'qagate',name:'QA-GATE',role:'Validador de calidad (26 items Block 5.3)',team:'automation',color:'var(--red)',model:'sonnet',status:'idle',task:''},
-  // Video Team
-  {id:'vora',name:'VORA',role:'Orquestador de Video',team:'video',color:'var(--accent)',model:'opus',status:'idle',task:''},
-  {id:'blueprint',name:'BLUEPRINT',role:'Blueprints de edicion Victor Heras',team:'video',color:'var(--blue)',model:'opus',status:'idle',task:''},
-  {id:'lens',name:'LENS',role:'Analizador de videos de referencia',team:'video',color:'var(--cyan)',model:'sonnet',status:'idle',task:''},
-  {id:'scout',name:'SCOUT',role:'Buscador de recursos (B-roll, SFX, musica)',team:'video',color:'var(--yellow)',model:'sonnet',status:'idle',task:''},
-  {id:'configura',name:'CONFIGURA',role:'Configurador tecnico CapCut',team:'video',color:'var(--teal)',model:'sonnet',status:'idle',task:''},
-  // Business Team
-  {id:'ceo',name:'CEO',role:'Director General — orquesta los 12 co-propietarios',team:'business',color:'var(--gold)',model:'opus',status:'idle',task:''},
-  {id:'guionista',name:'GUIONISTA',role:'Guiones estilo Victor Heras para TikTok/Reels/Shorts',team:'business',color:'var(--accent)',model:'opus',status:'idle',task:''},
-  {id:'ideador',name:'IDEADOR',role:'Ideas de contenido y calendarios de redes',team:'business',color:'var(--yellow)',model:'sonnet',status:'idle',task:''},
-  {id:'director',name:'DIRECTOR-CREATIVO',role:'Supervision de calidad creativa y marca',team:'business',color:'var(--blue)',model:'opus',status:'idle',task:''},
-  {id:'contador',name:'CONTADOR',role:'Precios, tasas venezolanas, cotizaciones, ROI',team:'business',color:'var(--green)',model:'opus',status:'idle',task:''},
-  {id:'estratega',name:'ESTRATEGA',role:'Campanas de marketing y crecimiento',team:'business',color:'var(--red)',model:'opus',status:'idle',task:''},
-  {id:'community',name:'COMMUNITY',role:'Redes sociales, copys, calendario de publicaciones',team:'business',color:'var(--pink)',model:'sonnet',status:'idle',task:''},
-  {id:'promos',name:'PROMOS',role:'Promociones, descuentos y programa de fidelidad',team:'business',color:'var(--magenta)',model:'sonnet',status:'idle',task:''},
-  {id:'closer',name:'CLOSER',role:'Scripts de venta, cierre y manejo de objeciones',team:'business',color:'var(--red)',model:'sonnet',status:'idle',task:''},
-  {id:'analista',name:'ANALISTA',role:'Mercado, competencia, tendencias de IA',team:'business',color:'var(--cyan)',model:'sonnet',status:'idle',task:''},
-  {id:'lanzador',name:'LANZADOR',role:'Planificacion de lanzamientos de productos',team:'business',color:'var(--accent)',model:'sonnet',status:'idle',task:''},
-  {id:'fidelidad',name:'FIDELIDAD',role:'Retencion, onboarding, anti-desercion (>95%)',team:'business',color:'var(--green)',model:'sonnet',status:'idle',task:''},
-  {id:'brandmaster',name:'BRANDMASTER',role:'Identidad de marca y consistencia de mensajes',team:'business',color:'var(--purple)',model:'sonnet',status:'idle',task:''},
+  // AUTOMATION TEAM
+  {id:'aria',name:'ARIA',role:'Orquestador de Automatizaciones',team:'automation',dept:'core',color:'#f97316',model:'opus',status:'idle',task:''},
+  {id:'nexarch',name:'NEXARCH',role:'Arquitecto N8N',team:'automation',dept:'core',color:'#3b82f6',model:'opus',status:'idle',task:''},
+  {id:'jsoncraft',name:'JSONCRAFT',role:'Constructor JSON N8N',team:'automation',dept:'core',color:'#a855f7',model:'sonnet',status:'idle',task:''},
+  {id:'scribe',name:'SCRIBE',role:'Escritor de Prompts B',team:'automation',dept:'core',color:'#22c55e',model:'sonnet',status:'idle',task:''},
+  {id:'qagate',name:'QA-GATE',role:'Validador de calidad',team:'automation',dept:'core',color:'#ef4444',model:'sonnet',status:'idle',task:''},
+  // VIDEO TEAM
+  {id:'vora',name:'VORA',role:'Orquestador de Video',team:'video',dept:'core',color:'#f97316',model:'opus',status:'idle',task:''},
+  {id:'blueprint',name:'BLUEPRINT',role:'Blueprints de edicion',team:'video',dept:'core',color:'#3b82f6',model:'opus',status:'idle',task:''},
+  {id:'lens',name:'LENS',role:'Analizador de referencias',team:'video',dept:'core',color:'#06b6d4',model:'sonnet',status:'idle',task:''},
+  {id:'scout',name:'SCOUT',role:'Buscador de recursos',team:'video',dept:'core',color:'#eab308',model:'sonnet',status:'idle',task:''},
+  {id:'configura',name:'CONFIGURA',role:'Configurador CapCut',team:'video',dept:'core',color:'#14b8a6',model:'sonnet',status:'idle',task:''},
+  // BUSINESS TEAM - Direccion
+  {id:'ceo',name:'CEO',role:'Director General',team:'business',dept:'direccion',color:'#f59e0b',model:'opus',status:'idle',task:''},
+  // Business - Marketing
+  {id:'estratega',name:'ESTRATEGA',role:'Campanas y crecimiento',team:'business',dept:'marketing',color:'#ef4444',model:'opus',status:'idle',task:''},
+  {id:'community',name:'COMMUNITY',role:'Redes sociales y comunidad',team:'business',dept:'marketing',color:'#ec4899',model:'sonnet',status:'idle',task:''},
+  {id:'brandmaster',name:'BRANDMASTER',role:'Identidad de marca',team:'business',dept:'marketing',color:'#a855f7',model:'sonnet',status:'idle',task:''},
+  // Business - Ventas
+  {id:'closer',name:'CLOSER',role:'Scripts de venta y cierre',team:'business',dept:'ventas',color:'#ef4444',model:'sonnet',status:'idle',task:''},
+  {id:'promos',name:'PROMOS',role:'Promociones y lealtad',team:'business',dept:'ventas',color:'#d946ef',model:'sonnet',status:'idle',task:''},
+  // Business - Contenido
+  {id:'guionista',name:'GUIONISTA',role:'Guiones Victor Heras',team:'business',dept:'contenido',color:'#f97316',model:'opus',status:'idle',task:''},
+  {id:'ideador',name:'IDEADOR',role:'Ideas y calendarios',team:'business',dept:'contenido',color:'#eab308',model:'sonnet',status:'idle',task:''},
+  {id:'director',name:'DIRECTOR-CREATIVO',role:'Supervision creativa',team:'business',dept:'contenido',color:'#3b82f6',model:'opus',status:'idle',task:''},
+  // Business - Finanzas
+  {id:'contador',name:'CONTADOR',role:'Precios y cotizaciones',team:'business',dept:'finanzas',color:'#22c55e',model:'opus',status:'idle',task:''},
+  {id:'analista',name:'ANALISTA',role:'Mercado y tendencias',team:'business',dept:'finanzas',color:'#06b6d4',model:'sonnet',status:'idle',task:''},
+  // Business - Retencion
+  {id:'fidelidad',name:'FIDELIDAD',role:'Retencion y anti-desercion',team:'business',dept:'retencion',color:'#22c55e',model:'sonnet',status:'idle',task:''},
+  {id:'lanzador',name:'LANZADOR',role:'Lanzamientos de productos',team:'business',dept:'retencion',color:'#f97316',model:'sonnet',status:'idle',task:''},
 ];
 
-const activityLog = [];
-let currentTeam = 'all';
+const teamNames={automation:'AUTOMATION TEAM',video:'VIDEO TEAM',business:'BUSINESS TEAM — Co-Propietarios'};
+const teamColors={automation:'var(--blue)',video:'var(--purple)',business:'var(--gold)'};
+const deptNames={core:'',direccion:'Direccion',marketing:'Marketing',ventas:'Ventas & Fidelizacion',contenido:'Contenido & Creatividad',finanzas:'Finanzas & Analisis',retencion:'Retencion & Lanzamientos'};
+const statusLabels={idle:'En espera',working:'Trabajando',review:'En revision',blocked:'Bloqueado',done:'Completado'};
+const statusColors={idle:'var(--muted)',working:'var(--green)',review:'var(--yellow)',blocked:'var(--red)',done:'var(--cyan)'};
+const activityLog=[];
+let chatMode='n8n';
+let doneCount=0;
+let modalAction=null;
+let pendingUrl=null;
 
-function addLog(agentName, action, color) {
-  const now = new Date();
-  const time = now.toLocaleTimeString('es-VE', {hour:'2-digit',minute:'2-digit'});
-  activityLog.unshift({time, agent: agentName, action, color});
-  if (activityLog.length > 50) activityLog.pop();
-  renderLog();
-}
-
-function renderLog() {
-  const el = document.getElementById('log-view');
-  el.innerHTML = activityLog.map(l => `
-    <div class="log-entry">
-      <span class="time">${l.time}</span>
-      <span class="agent-tag" style="background:${l.color};color:#fff">${l.agent}</span>
-      ${l.action}
-    </div>
-  `).join('') || '<div style="padding:20px;color:var(--muted);text-align:center">Sin actividad registrada</div>';
-}
-
-function renderAgents() {
-  const office = document.getElementById('office');
-  const filtered = currentTeam === 'all' ? agents : agents.filter(a => a.team === currentTeam);
-
-  let html = '';
-  let lastTeam = '';
-
-  filtered.forEach(a => {
-    if (currentTeam === 'all' && a.team !== lastTeam) {
-      lastTeam = a.team;
-      const teamNames = {automation:'AUTOMATION TEAM',video:'VIDEO TEAM',business:'BUSINESS TEAM — Co-Propietarios'};
-      html += `<div style="grid-column:1/-1" class="team-label">${teamNames[a.team]}</div>`;
+// ============ CHAT MODE CONFIG ============
+const chatModes={
+  n8n:{
+    agents:['aria','nexarch','jsoncraft','scribe','qagate'],
+    welcome:'Modo N8N: Describe la automatizacion que necesitas. Te dare el JSON listo para importar en n8n sin conectarme a tu servidor.',
+    router(msg){
+      const m=msg.toLowerCase();
+      if(m.includes('arquitectura')||m.includes('nodos')||m.includes('disena'))return 'nexarch';
+      if(m.includes('json')||m.includes('importar')||m.includes('genera'))return 'jsoncraft';
+      if(m.includes('prompt')||m.includes('chatbot')||m.includes('sistema'))return 'scribe';
+      if(m.includes('valida')||m.includes('revisa')||m.includes('qa'))return 'qagate';
+      return 'aria';
     }
+  },
+  video:{
+    agents:['vora','blueprint','lens','scout','configura','guionista','ideador','director'],
+    welcome:'Modo Video: Describe tu idea de video o pega un enlace de TikTok/Instagram/YouTube para analizar y recrear con tu estilo.',
+    router(msg){
+      const m=msg.toLowerCase();
+      if(m.includes('guion')||m.includes('script')||m.includes('escrib'))return 'guionista';
+      if(m.includes('idea')||m.includes('calendario')||m.includes('contenido'))return 'ideador';
+      if(m.includes('blueprint')||m.includes('edicion')||m.includes('editar'))return 'blueprint';
+      if(m.includes('referencia')||m.includes('analiz')||m.includes('estilo'))return 'lens';
+      if(m.includes('recurso')||m.includes('musica')||m.includes('sfx')||m.includes('broll'))return 'scout';
+      if(m.includes('capcut')||m.includes('export')||m.includes('config'))return 'configura';
+      if(m.includes('revis')||m.includes('aprueb'))return 'director';
+      return 'vora';
+    }
+  },
+  ceo:{
+    agents:['ceo','estratega','community','brandmaster','closer','promos','contador','analista','fidelidad','lanzador'],
+    welcome:'Modo CEO: Pide reportes, estrategias, precios, promos, campanas o analisis de mercado.',
+    router(msg){
+      const m=msg.toLowerCase();
+      if(m.includes('precio')||m.includes('tasa')||m.includes('cotiza')||m.includes('costo'))return 'contador';
+      if(m.includes('campana')||m.includes('estrategia')||m.includes('crecimiento'))return 'estratega';
+      if(m.includes('redes')||m.includes('post')||m.includes('tiktok')||m.includes('instagram'))return 'community';
+      if(m.includes('marca')||m.includes('tono')||m.includes('identidad'))return 'brandmaster';
+      if(m.includes('venta')||m.includes('cierre')||m.includes('script')||m.includes('objecion'))return 'closer';
+      if(m.includes('promo')||m.includes('descuento')||m.includes('fideliza')||m.includes('lealtad'))return 'promos';
+      if(m.includes('mercado')||m.includes('competencia')||m.includes('tendencia'))return 'analista';
+      if(m.includes('retenc')||m.includes('desercion')||m.includes('cliente'))return 'fidelidad';
+      if(m.includes('lanzamiento')||m.includes('nuevo producto')||m.includes('lanzar'))return 'lanzador';
+      return 'ceo';
+    }
+  }
+};
 
-    const statusColors = {idle:'var(--muted)',working:'var(--green)',review:'var(--yellow)',blocked:'var(--red)'};
-    const statusLabels = {idle:'En espera',working:'Trabajando',review:'En revision',blocked:'Bloqueado'};
+// ============ PANEL SWITCHING ============
+function switchPanel(name){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.main-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  event.target.closest('.main-tab').classList.add('active');
+  if(name==='office')renderOffice();
+  if(name==='agents')renderAgents();
+  if(name==='log')renderLog();
+}
 
-    html += `
-    <div class="agent-card" data-team="${a.team}" id="card-${a.id}">
-      <div class="color-bar" style="background:${a.color}"></div>
-      <div class="top">
-        <div class="name" style="color:${a.color}">${a.name}</div>
-        <div class="model">${a.model}</div>
-      </div>
-      <div class="role">${a.role}</div>
-      <div class="status">
-        <div class="status-dot" style="background:${statusColors[a.status]}${a.status==='idle'?';animation:none':''}"></div>
-        ${statusLabels[a.status]}
-      </div>
-      ${a.task ? `<div class="task">${a.task}</div>` : ''}
-      <div class="actions">
-        <button class="btn primary" onclick="openModal('${a.id}')">Asignar Tarea</button>
-        <button class="btn" onclick="toggleStatus('${a.id}')">Cambiar Estado</button>
-        ${a.task ? `<button class="btn" onclick="clearTask('${a.id}')" style="color:var(--red)">Limpiar</button>` : ''}
-      </div>
-    </div>`;
+// ============ STATS ============
+function updateStats(){
+  document.getElementById('s-active').textContent=agents.filter(a=>a.status==='working').length;
+  document.getElementById('s-tasks').textContent=agents.filter(a=>a.task).length;
+  document.getElementById('s-done').textContent=doneCount;
+}
+
+// ============ PIXEL OFFICE ============
+function renderOffice(){
+  const el=document.getElementById('pixelOffice');
+  const W=el.clientWidth,H=el.clientHeight;
+  const floorY=H*0.4;
+
+  let html=`<div class="floor"></div><div class="floor-grid"></div>`;
+
+  // Room dividers
+  const r1=W*0.33,r2=W*0.66;
+  html+=`<div class="room-divider" style="left:${r1}px;height:${H}px"></div>`;
+  html+=`<div class="room-divider" style="left:${r2}px;height:${H}px"></div>`;
+
+  // Room labels
+  html+=`<div class="room-label" style="top:${floorY-30}px;left:${r1/2-40}px">AUTOMATION</div>`;
+  html+=`<div class="room-label" style="top:${floorY-30}px;left:${r1+(r2-r1)/2-20}px">VIDEO</div>`;
+  html+=`<div class="room-label" style="top:${floorY-30}px;left:${r2+(W-r2)/2-30}px">BUSINESS</div>`;
+
+  // Decorations
+  html+=`<div class="water-cooler" style="left:${r1-30}px;top:${floorY+20}px"></div>`;
+  html+=`<div class="plant" style="left:${r2+10}px;top:${floorY+10}px"></div>`;
+  html+=`<div class="plant" style="left:${W-40}px;top:${floorY+30}px"></div>`;
+
+  // Place agents at desks
+  const teams={automation:[],video:[],business:[]};
+  agents.forEach(a=>teams[a.team].push(a));
+
+  Object.entries(teams).forEach(([team,members])=>{
+    let startX,endX;
+    if(team==='automation'){startX=20;endX=r1-20}
+    else if(team==='video'){startX=r1+20;endX=r2-20}
+    else{startX=r2+20;endX=W-20}
+
+    const cols=Math.ceil(Math.sqrt(members.length));
+    const rows=Math.ceil(members.length/cols);
+    const cellW=(endX-startX)/cols;
+    const cellH=(H-floorY-20)/rows;
+
+    members.forEach((a,i)=>{
+      const col=i%cols,row=Math.floor(i/cols);
+      const x=startX+col*cellW+cellW/2-40;
+      const y=floorY+10+row*cellH;
+
+      // Desk
+      html+=`<div class="desk" style="left:${x}px;top:${y+30}px"></div>`;
+
+      // Agent
+      const isWorking=a.status==='working'?'working':'';
+      html+=`
+        <div class="pixel-agent ${isWorking}" style="left:${x+28}px;top:${y}px" onclick="openAgentModal('${a.id}')" title="${a.name}: ${a.role}">
+          ${a.task?`<div class="status-bubble">${a.task.substring(0,20)}${a.task.length>20?'...':''}</div>`:''}
+          <div class="name-tag" style="background:${a.color}">${a.name}</div>
+          <div class="head"></div>
+          <div class="eyes"><div class="eye"></div><div class="eye"></div></div>
+          <div class="body" style="background:${a.color}"></div>
+        </div>`;
+    });
   });
 
-  office.innerHTML = html;
+  el.innerHTML=html;
+}
+
+// ============ AGENTS PANEL ============
+function renderAgents(){
+  const el=document.getElementById('agents-container');
+  let html='';
+
+  ['automation','video','business'].forEach(team=>{
+    const teamAgents=agents.filter(a=>a.team===team);
+    html+=`<div class="team-section">
+      <div class="team-header" style="border-left:3px solid ${teamColors[team]}">
+        <span class="team-name">${teamNames[team]}</span>
+        <button class="team-btn" onclick="assignTeamTask('${team}')">📋 Tarea para todo el equipo</button>
+      </div>`;
+
+    if(team==='business'){
+      const depts=['direccion','marketing','ventas','contenido','finanzas','retencion'];
+      depts.forEach(dept=>{
+        const deptAgents=teamAgents.filter(a=>a.dept===dept);
+        if(!deptAgents.length)return;
+        html+=`<div class="dept-label" style="border-left:2px solid ${teamColors[team]};padding-left:8px">${deptNames[dept]}</div>`;
+        html+=`<div class="agents-grid">${deptAgents.map(a=>agentCardHTML(a)).join('')}</div>`;
+      });
+    } else {
+      html+=`<div class="agents-grid">${teamAgents.map(a=>agentCardHTML(a)).join('')}</div>`;
+    }
+    html+=`</div>`;
+  });
+
+  el.innerHTML=html;
   updateStats();
 }
 
-function updateStats() {
-  document.getElementById('active-count').textContent = agents.filter(a => a.status === 'working').length;
-  document.getElementById('task-count').textContent = agents.filter(a => a.task).length;
+function agentCardHTML(a){
+  const sc=statusColors[a.status];
+  const sl=statusLabels[a.status];
+  const isPulse=a.status==='working'||a.status==='review'?'pulse':'';
+  return `
+  <div class="agent-card" id="card-${a.id}">
+    <div class="color-bar" style="background:${a.color}"></div>
+    <div class="top">
+      <div class="name" style="color:${a.color}">${a.name}</div>
+      <div class="badges">
+        <div class="badge">${a.model}</div>
+        ${a.dept&&a.dept!=='core'?`<div class="badge">${a.dept}</div>`:''}
+      </div>
+    </div>
+    <div class="role">${a.role}</div>
+    <div class="status"><div class="status-dot ${isPulse}" style="background:${sc}"></div>${sl}</div>
+    ${a.task?`<div class="task-text">${a.task}</div>`:''}
+    <div class="actions">
+      <button class="btn primary" onclick="openAgentModal('${a.id}')">Asignar</button>
+      <button class="btn" onclick="cycleStatus('${a.id}')">Estado</button>
+      ${a.task?`<button class="btn danger" onclick="clearTask('${a.id}')">✕</button>`:''}
+    </div>
+  </div>`;
 }
 
-function showTeam(team) {
-  currentTeam = team;
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  event.target.classList.add('active');
+// ============ CHAT ============
+function switchChatMode(mode){
+  chatMode=mode;
+  document.querySelectorAll('.chat-mode').forEach(m=>m.classList.remove('active'));
+  event.target.closest('.chat-mode').classList.add('active');
+  renderChatSidebar();
+  // Welcome message
+  const msgs=document.getElementById('chatMessages');
+  msgs.innerHTML=`<div class="msg agent"><div class="msg-header">SISTEMA</div>${chatModes[mode].welcome}</div>`;
+}
 
-  if (team === 'log') {
-    document.getElementById('office').style.display = 'none';
-    document.getElementById('log-view').style.display = 'block';
-    renderLog();
-  } else {
-    document.getElementById('office').style.display = 'grid';
-    document.getElementById('log-view').style.display = 'none';
-    renderAgents();
+function renderChatSidebar(){
+  const sb=document.getElementById('chatSidebar');
+  const mode=chatModes[chatMode];
+  const modeAgents=mode.agents.map(id=>agents.find(a=>a.id===id));
+
+  let html='<div class="sidebar-title">Agentes en este modo</div>';
+  let lastDept='';
+  modeAgents.forEach(a=>{
+    if(chatMode==='ceo'&&a.dept!==lastDept){
+      lastDept=a.dept;
+      html+=`<div class="sidebar-title" style="margin-top:12px">${deptNames[a.dept]||'Core'}</div>`;
+    }
+    const sc=statusColors[a.status];
+    html+=`<div class="agent-pill"><div class="pill-dot" style="background:${a.color}"></div><span style="color:${sc==='var(--muted)'?'var(--text)':sc}">${a.name}</span></div>`;
+  });
+  sb.innerHTML=html;
+}
+
+function sendChat(){
+  const input=document.getElementById('chatInput');
+  const text=input.value.trim();
+  if(!text&&!pendingUrl)return;
+
+  const msgs=document.getElementById('chatMessages');
+
+  // User message
+  let userHTML=`<div class="msg user">${escHTML(text)}`;
+  if(pendingUrl){
+    userHTML+=renderMediaEmbed(pendingUrl);
+    pendingUrl=null;
+    document.getElementById('urlPreview').innerHTML='';
   }
+  userHTML+=`</div>`;
+  msgs.innerHTML+=userHTML;
+
+  input.value='';
+  input.style.height='44px';
+
+  // Route to agent
+  const mode=chatModes[chatMode];
+  const agentId=mode.router(text);
+  const agent=agents.find(a=>a.id===agentId);
+
+  // Mark agent working
+  agent.status='working';
+  agent.task=text.substring(0,60);
+  addLog(agent.name,'Procesando: "'+text.substring(0,40)+'..."',agent.color);
+  renderChatSidebar();
+  updateStats();
+
+  // Simulate agent response
+  setTimeout(()=>{
+    let response='';
+    if(chatMode==='n8n'){
+      response=generateN8NResponse(agent,text);
+    }else if(chatMode==='video'){
+      response=generateVideoResponse(agent,text);
+    }else{
+      response=generateCEOResponse(agent,text);
+    }
+    msgs.innerHTML+=`<div class="msg agent"><div class="msg-header" style="color:${agent.color}">${agent.name}</div>${response}</div>`;
+    msgs.scrollTop=msgs.scrollHeight;
+
+    agent.status='idle';
+    renderChatSidebar();
+    updateStats();
+  },1500);
+
+  msgs.scrollTop=msgs.scrollHeight;
 }
 
-function openModal(agentId) {
-  const modal = document.getElementById('modal');
-  const select = document.getElementById('modal-agent');
-  select.innerHTML = agents.map(a => `<option value="${a.id}" ${a.id===agentId?'selected':''}>${a.name} — ${a.role}</option>`).join('');
-  document.getElementById('modal-task').value = '';
-  document.getElementById('modal-title').textContent = `Asignar Tarea a ${agents.find(a=>a.id===agentId).name}`;
-  modal.classList.add('show');
+function generateN8NResponse(agent,text){
+  if(agent.id==='aria'){
+    return `Analizando tu solicitud...<br><br>He identificado que necesitas una automatizacion. Voy a coordinar con el equipo:<br>
+    <b>1. NEXARCH</b> disenara la arquitectura de nodos<br>
+    <b>2. JSONCRAFT</b> generara el JSON importable<br>
+    <b>3. SCRIBE</b> escribira el prompt del chatbot<br>
+    <b>4. QA-GATE</b> validara todo antes de entregartelo<br><br>
+    <i>Describe con mas detalle: tipo de negocio, que canal (WhatsApp, Telegram), y que quieres que haga el chatbot.</i>`;
+  }
+  if(agent.id==='jsoncraft'){
+    return `Generando JSON para n8n...<div class="json-block">{
+  "name": "Automatizacion aut8ma",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "webhook-aut8ma",
+        "responseMode": "responseNode"
+      },
+      "name": "Webhook Entry",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 300]
+    }
+  ],
+  "connections": {}
+}</div><br><i>Este es un esqueleto inicial. Dame mas detalles para generar la automatizacion completa con todos los nodos.</i>`;
+  }
+  return `<b>${agent.name}</b> recibio tu tarea: "${escHTML(text.substring(0,80))}"<br><br>Procesando... Dame mas contexto para darte un resultado preciso.`;
 }
 
-function closeModal() {
-  document.getElementById('modal').classList.remove('show');
+function generateVideoResponse(agent,text){
+  if(agent.id==='guionista'){
+    return `<b>Analizando tema para guion Victor Heras...</b><br><br>
+    Estructura que usare:<br>
+    🎣 <b>HOOK</b> (0-3 seg) — Dolor/curiosidad extrema<br>
+    😩 <b>PROBLEMA</b> (3-15 seg) — Amplificar dolor<br>
+    📖 <b>HISTORIA</b> (15-30 seg) — Conexion emocional<br>
+    💡 <b>SOLUCION</b> (30-45 seg) — aut8ma como solucion<br>
+    📊 <b>PRUEBA SOCIAL</b> (45-55 seg) — Resultados<br>
+    📣 <b>CTA</b> (55-60 seg) — Accion clara<br><br>
+    <i>Dame el tema especifico y duracion deseada para crear el guion completo.</i>`;
+  }
+  return `<b>${agent.name}</b> trabajando en tu solicitud de video...<br><br>Necesito mas detalles: plataforma (TikTok/Reels/Shorts), duracion, y objetivo (awareness/ventas/leads).`;
 }
 
-function assignTask() {
-  const agentId = document.getElementById('modal-agent').value;
-  const task = document.getElementById('modal-task').value.trim();
-  const priority = document.getElementById('modal-priority').value;
-  if (!task) return;
-
-  const agent = agents.find(a => a.id === agentId);
-  const priorityTag = priority !== 'normal' ? ` [${priority.toUpperCase()}]` : '';
-  agent.task = task + priorityTag;
-  agent.status = 'working';
-
-  addLog(agent.name, `Nueva tarea: "${task.substring(0,60)}${task.length>60?'...':''}"${priorityTag}`, agent.color);
-  closeModal();
-  renderAgents();
+function generateCEOResponse(agent,text){
+  if(agent.id==='contador'){
+    return `<b>Calculadora de Precios aut8ma</b><br><br>
+    Necesito obtener las tasas del dia antes de calcular:<br>
+    🏦 BCV Oficial | 📈 Paralelo | 🔶 Binance P2P<br><br>
+    <i>Especifica: que plan quieres cotizar (Emprendedor/Negocio/Premium) y si quieres aplicar algun descuento.</i>`;
+  }
+  if(agent.id==='estratega'){
+    return `<b>Estrategia de Marketing aut8ma</b><br><br>
+    Pilares de contenido activos:<br>
+    📚 40% Educativo/Valor<br>
+    💰 30% Venta<br>
+    🎭 20% Entretenimiento/Inspiracion<br>
+    📻 10% Autoridad/Noticias<br><br>
+    <i>Que tipo de campana necesitas? Dame el objetivo y el publico target.</i>`;
+  }
+  return `<b>${agent.name}</b> procesando tu solicitud...<br><br>"${escHTML(text.substring(0,80))}"<br><br><i>Dame mas contexto para darte una respuesta detallada.</i>`;
 }
 
-function toggleStatus(agentId) {
-  const agent = agents.find(a => a.id === agentId);
-  const states = ['idle','working','review','blocked'];
-  const idx = states.indexOf(agent.status);
-  agent.status = states[(idx + 1) % states.length];
-  addLog(agent.name, `Estado cambiado a: ${agent.status}`, agent.color);
-  renderAgents();
+// ============ MEDIA ============
+function attachFile(type){
+  const names={img:'imagen',doc:'documento',vid:'video'};
+  const exts={img:'.jpg,.png,.gif,.webp',doc:'.pdf,.docx,.txt,.md',vid:'.mp4,.mov,.webm'};
+  const inp=document.createElement('input');
+  inp.type='file';
+  inp.accept=exts[type];
+  inp.onchange=()=>{
+    if(inp.files[0]){
+      const f=inp.files[0];
+      const msgs=document.getElementById('chatMessages');
+      let preview='';
+      if(type==='img'){
+        const url=URL.createObjectURL(f);
+        preview=`<div class="media-preview"><img src="${url}"></div>`;
+      }else if(type==='vid'){
+        const url=URL.createObjectURL(f);
+        preview=`<div class="media-preview"><video src="${url}" controls></video></div>`;
+      }else{
+        preview=`<div class="media-preview"><div class="file-attach">📄 ${f.name} (${(f.size/1024).toFixed(1)} KB)</div></div>`;
+      }
+      msgs.innerHTML+=`<div class="msg user">Adjunto ${names[type]}:${preview}</div>`;
+      msgs.scrollTop=msgs.scrollHeight;
+    }
+  };
+  inp.click();
 }
 
-function clearTask(agentId) {
-  const agent = agents.find(a => a.id === agentId);
-  addLog(agent.name, `Tarea completada: "${agent.task.substring(0,40)}..."`, agent.color);
-  agent.task = '';
-  agent.status = 'idle';
-  renderAgents();
+function pasteUrl(){
+  const url=prompt('Pega el enlace de TikTok, Instagram o YouTube:');
+  if(!url)return;
+  pendingUrl=url;
+  document.getElementById('urlPreview').innerHTML=`<div class="url-preview">🔗 ${escHTML(url)}<br><small>Se adjuntara al siguiente mensaje</small></div>`;
 }
 
-// Init
-renderAgents();
-renderLog();
+function renderMediaEmbed(url){
+  // YouTube
+  let m=url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]+)/);
+  if(m)return `<div class="media-preview"><iframe src="https://www.youtube.com/embed/${m[1]}" allowfullscreen></iframe></div>`;
+  // TikTok
+  if(url.includes('tiktok.com'))return `<div class="media-preview"><div class="file-attach">🎵 TikTok: <a href="${escHTML(url)}" target="_blank" style="color:var(--accent)">${escHTML(url.substring(0,50))}...</a><br><small>Abre el enlace para ver el video y describe que quieres replicar</small></div></div>`;
+  // Instagram
+  if(url.includes('instagram.com'))return `<div class="media-preview"><div class="file-attach">📸 Instagram: <a href="${escHTML(url)}" target="_blank" style="color:var(--accent)">${escHTML(url.substring(0,50))}...</a><br><small>Abre el enlace para ver el contenido</small></div></div>`;
+  // Generic
+  return `<div class="media-preview"><div class="file-attach">🔗 <a href="${escHTML(url)}" target="_blank" style="color:var(--accent)">${escHTML(url)}</a></div></div>`;
+}
+
+// ============ TEAM TASK ============
+function assignTeamTask(team){
+  const teamLabel=teamNames[team];
+  document.getElementById('modal-title').textContent=`Tarea para ${teamLabel}`;
+  document.getElementById('modal-body').innerHTML=`
+    <p style="font-size:12px;color:var(--muted);margin-bottom:10px">Esta tarea se asignara a TODOS los agentes del equipo ${teamLabel}.</p>
+    <textarea id="team-task-input" placeholder="Describe la tarea para todo el equipo..."></textarea>
+    <select id="team-priority"><option value="">Normal</option><option value=" [ALTA]">Alta</option><option value=" [URGENTE]">Urgente</option></select>`;
+  modalAction=()=>{
+    const task=document.getElementById('team-task-input').value.trim();
+    const pri=document.getElementById('team-priority').value;
+    if(!task)return;
+    agents.filter(a=>a.team===team).forEach(a=>{
+      a.task=task+pri;
+      a.status='working';
+    });
+    addLog(teamLabel,`Tarea asignada a todo el equipo: "${task.substring(0,40)}..."`,teamColors[team]);
+    renderAgents();
+    renderOffice();
+  };
+  document.getElementById('modal').classList.add('show');
+}
+
+function openAgentModal(agentId){
+  const agent=agents.find(a=>a.id===agentId);
+  document.getElementById('modal-title').textContent=`Tarea para ${agent.name}`;
+  document.getElementById('modal-body').innerHTML=`
+    <p style="font-size:12px;color:var(--muted);margin-bottom:10px">${agent.role}</p>
+    <textarea id="agent-task-input" placeholder="Describe la tarea...">${agent.task||''}</textarea>
+    <select id="agent-status">
+      ${Object.entries(statusLabels).map(([k,v])=>`<option value="${k}" ${agent.status===k?'selected':''}>${v}</option>`).join('')}
+    </select>`;
+  modalAction=()=>{
+    const task=document.getElementById('agent-task-input').value.trim();
+    const status=document.getElementById('agent-status').value;
+    agent.task=task;
+    agent.status=task?'working':status;
+    if(task)addLog(agent.name,`Nueva tarea: "${task.substring(0,40)}..."`,agent.color);
+    renderAgents();
+    renderOffice();
+  };
+  document.getElementById('modal').classList.add('show');
+}
+
+function confirmModal(){if(modalAction){modalAction();closeModal()}}
+function closeModal(){document.getElementById('modal').classList.remove('show');modalAction=null}
+
+function cycleStatus(id){
+  const a=agents.find(x=>x.id===id);
+  const s=['idle','working','review','blocked','done'];
+  a.status=s[(s.indexOf(a.status)+1)%s.length];
+  if(a.status==='done'){doneCount++;a.task=''}
+  addLog(a.name,`Estado: ${statusLabels[a.status]}`,a.color);
+  renderAgents();renderOffice();updateStats();
+}
+
+function clearTask(id){
+  const a=agents.find(x=>x.id===id);
+  addLog(a.name,`Tarea completada`,a.color);
+  a.task='';a.status='idle';doneCount++;
+  renderAgents();renderOffice();updateStats();
+}
+
+// ============ LOG ============
+function addLog(name,action,color){
+  const t=new Date().toLocaleTimeString('es-VE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  activityLog.unshift({time:t,agent:name,action,color});
+  if(activityLog.length>100)activityLog.pop();
+}
+
+function renderLog(){
+  const el=document.getElementById('log-container');
+  el.innerHTML=activityLog.map(l=>`<div class="log-entry"><span class="time">${l.time}</span><span class="agent-tag" style="background:${l.color}">${l.agent}</span>${l.action}</div>`).join('')
+    ||'<div style="padding:40px;text-align:center;color:var(--muted)">Sin actividad registrada</div>';
+}
+
+function escHTML(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+// ============ INIT ============
+renderOffice();
+renderChatSidebar();
+updateStats();
+
+// Auto-resize textarea
+document.getElementById('chatInput').addEventListener('input',function(){
+  this.style.height='44px';
+  this.style.height=Math.min(this.scrollHeight,150)+'px';
+});
+
+// Resize office on window resize
+window.addEventListener('resize',()=>{
+  if(document.getElementById('panel-office').classList.contains('active'))renderOffice();
+});
 </script>
 </body>
 </html>

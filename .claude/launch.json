@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "dashboard",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["C:/Users/Gabriel Hung/AppData/Roaming/npm/node_modules/serve/build/main.js", "dashboard", "-l", "3333"],
+      "port": 3333
+    }
+  ]
+}
