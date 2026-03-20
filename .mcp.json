@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "n8n-aut8ma": {
+      "type": "url",
+      "url": "https://vmi3104177.contaboserver.net/mcp-server/http"
+    }
+  }
+}
